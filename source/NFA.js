@@ -4,7 +4,7 @@ var nfaGenerator = function(tuple) {
     var initialState = tuple.startState;
     var finalStates = tuple.finalState;
     var transitionFunction = tuple.transitionFunction;
-    
+
     return function(inputString) {
         var finalStatesForAString = stateReducer(inputString, initialState, transitionFunction);
         return getFinalStates(finalStatesForAString, finalStates);
@@ -12,7 +12,7 @@ var nfaGenerator = function(tuple) {
 };
 
 var isEpsilonPresent = function(transitionFunction, state) {
-    return (!_.isEmpty(Object.keys(transitionFunction[state])) && _.includes(Object.keys(transitionFunction[state]),'e'));
+    return (transitionFunction[state] && transitionFunction[state]['e']);
 }
 
 var getFinalStates = function(finalStatesForAString, finalStates) {
@@ -22,6 +22,9 @@ var getFinalStates = function(finalStatesForAString, finalStates) {
 }
 
 var stateReducer = function(inputString, initialState, transitionFunction) {
+    if(inputString.length == 0) {
+        return getAllPresentEpsilon(transitionFunction, initialState).concat(initialState);
+    }
     return inputString.split('').reduce(function(initialState, firstChar) {
         return stateMapper(initialState, transitionFunction, firstChar);
     }, [initialState]);
@@ -35,6 +38,11 @@ var stateMapper = function(initialState, transitionFunction, firstChar) {
         }
         return transitionFunction[state] && recordState || [];
     }));
+}
+
+var getAllPresentEpsilon = function(transitionFunction,initialState) {
+    var transitOnEpsilon = transitionFunction[initialState]['e'];
+    return (isEpsilonPresent(transitionFunction,initialState) && transitOnEpsilon || []);
 }
 exports.nfaGenerator = nfaGenerator;
 
